@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+    <ModulePrefs title="edX Hangouts On Air">
+        <Require feature="rpc" />
+        <Require feature="views" />
+        <Require feature="locked-domain" />
+    </ModulePrefs>
+    <Content type="html"><![CDATA[
+
+<html>
+<head>
+<style>
+body {
+    margin: 0;
+    padding: 20px;
+    background: #fff;
+    color: #000;
+    font: 400 12px/1.5 sans-serif;
+}
+
+input[type=text] {
+    border: 1px solid #ccc;
+    padding: 10px 8px;
+    font-size: 14px;
+    color: #333;
+    box-shadow: inset 0 0 8px -4px rgba(0,0,0,0.75);
+    box-sizing: border-box;
+    width: 100%;
+    display: block;
+}
+
+label {
+    display: block;
+    padding: 10px 0;
+    color: #999;
+}
+
+img {
+    width: 100%;
+    margin: 0 0 30px;
+    display: block;
+}
+
+</style>
+</head>
+<body>
+<img src='https://open.edx.org/sites/all/themes/edx_open/logo.png' width='100%'>
+
+<!--<p>
+<input class="button" type="button" value="Show participants!" id="showParticipants" style="visibility:hidden;" onClick="showParticipants()"/>
+</p>-->
+
+<div id="participantsDiv"></div>
+
+<label>
+    <div>YouTube URL</div>
+    <input type="text" value="" id="youtube_url">
+</label>
+
+<label>
+    <div>Hangouts URL</div>
+    <input type="text" value="" id="hangouts_url">
+</label>
+
+<label>
+    <div>Hangouts ID</div>
+    <input type="text" value="" id="hangouts_id">
+</label>
+<div id="start_data"></div>
+
+<script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
+<script>
+function showParticipants() {
+    var participants = gapi.hangout.getParticipants();
+    var retVal = '<p>Participants: </p><ul>';
+
+    for (var index in participants) {
+        var participant = participants[index];
+
+        if (!participant.person) {
+            retVal += '<li>A participant not running this app</li>';
+        }
+        retVal += '<li>' + participant.person.displayName + '</li>';
+    }
+    retVal += '</ul>';
+
+    var div = document.getElementById('participantsDiv');
+    div.innerHTML = retVal;
+}
+
+function init() {
+    // When API is ready...
+    gapi.hangout.onApiReady.add(function(e) {
+        document.getElementById('showParticipants').style.visibility = 'visible';
+        var appData = gadgets.views.getParams()['appData'];
+    });
+
+    gapi.hangout.onair.onBroadcastingChanged.add(function(e) {
+        var callbackObject = gapi.hangout.getStartData();
+        var hangoutUrl = gapi.hangout.getHangoutUrl();
+        var hangoutId = gapi.hangout.getHangoutId();
+
+        console.log('edx-hangout', hangoutUrl, e);
+
+        document.getElementById('hangouts_url').value = hangoutUrl;
+        document.getElementById('hangouts_id').value = hangoutId;
+        document.getElementById('start_data').innerHTML = callbackObject;
+    });
+
+    gapi.hangout.onair.onYouTubeLiveIdReady.add(function(e) {
+        document.getElementById('youtube_url').value = 'http://youtu.be/' + e.youTubeLiveId;
+    });
+}
+
+// Wait for gadget to load.
+gadgets.util.registerOnLoadHandler(init);
+
+</script>
+</body>
+]]>
+</Content>
+</Module>
+
