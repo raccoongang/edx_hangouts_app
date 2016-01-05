@@ -46,12 +46,6 @@ img {
 <body>
 <img src='https://open.edx.org/sites/all/themes/edx_open/logo.png' width='100%'>
 
-<!--<p>
-<input class="button" type="button" value="Show participants!" id="showParticipants" style="visibility:hidden;" onClick="showParticipants()"/>
-</p>-->
-
-<div id="participantsDiv"></div>
-
 <label>
     <div>YouTube URL</div>
     <input type="text" value="" id="youtube_url">
@@ -66,49 +60,39 @@ img {
     <div>Hangouts ID</div>
     <input type="text" value="" id="hangouts_id">
 </label>
-<div id="start_data"></div>
 
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
 <script>
-function showParticipants() {
-    var participants = gapi.hangout.getParticipants();
-    var retVal = '<p>Participants: </p><ul>';
-
-    for (var index in participants) {
-        var participant = participants[index];
-
-        if (!participant.person) {
-            retVal += '<li>A participant not running this app</li>';
-        }
-        retVal += '<li>' + participant.person.displayName + '</li>';
-    }
-    retVal += '</ul>';
-
-    var div = document.getElementById('participantsDiv');
-    div.innerHTML = retVal;
-}
 
 function init() {
     // When API is ready...
     gapi.hangout.onApiReady.add(function(e) {
-        document.getElementById('showParticipants').style.visibility = 'visible';
         var appData = gadgets.views.getParams()['appData'];
     });
 
     gapi.hangout.onair.onBroadcastingChanged.add(function(e) {
-        var callbackObject = gapi.hangout.getStartData();
         var hangoutUrl = gapi.hangout.getHangoutUrl();
         var hangoutId = gapi.hangout.getHangoutId();
 
-        console.log('edx-hangout', hangoutUrl, e);
-
         document.getElementById('hangouts_url').value = hangoutUrl;
         document.getElementById('hangouts_id').value = hangoutId;
-        document.getElementById('start_data').innerHTML = callbackObject;
     });
 
     gapi.hangout.onair.onYouTubeLiveIdReady.add(function(e) {
         document.getElementById('youtube_url').value = 'http://youtu.be/' + e.youTubeLiveId;
+        var callbackObject = JSON.parse(gapi.hangout.getStartData());
+        //callbackObject = {
+        //    saveYoutubeUrl: 'http://127.0.0.1:8001/preview/xblock/block-v1:testorg+cs101+2016_T1+type@hangouts+block@8e24da68993c4cea928e85c579c39f74/handler/save_data_hangouts'
+        //};
+        if (callbackObject && callbackObject.saveYoutubeUrl) {
+            $.get(
+                callbackObject.saveYoutubeUrl + "?youtube_url=" + e.youTubeLiveId,
+                function(data) {
+                    console.log('saved youtube url to edx xblock');
+                }
+            )
+        }
     });
 }
 
